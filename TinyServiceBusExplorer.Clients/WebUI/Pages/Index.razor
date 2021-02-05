@@ -1,0 +1,80 @@
+﻿@page "/"
+@using TinyServiceBusExplorer.Core.Services
+@using TinyServiceBusExplorer.Core.Models;
+@using TinyServiceBusExplorer.FormModels;
+@using TinyServiceBusExplorer;
+
+
+@inject NavigationManager navigation
+@inject IConnectionService connectionService
+
+
+<h2>Welcome</h2>
+
+<p>This is Tiny Service Bus Explorer! The easy way to explore what's in your bus!</p>
+
+<h3>Create a new connection</h3>
+<EditForm Model="@connectionForm" OnValidSubmit="@HandleSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label>Connection name:</label>
+        <InputText class="form-control" @bind-Value="@connectionForm.Name" />
+    </div>
+    <div class="form-group">
+        <label>Connection string:</label>
+        <InputText class="form-control" @bind-Value="@connectionForm.Value" />
+    </div>
+    <div class="form-check">
+        <InputCheckbox class="form-check-input" @bind-Value="@connectionForm.Save" />
+        <label class="form-check-label">Save connection</label>
+        </div>
+    <br />
+        <button class="btn btn-primary" type="submit">Submit</button>
+</EditForm>
+<br />
+<h3>Saved connections</h3>
+<table class="table">
+    <tbody>
+        @foreach (var connection in connections)
+        {
+            <td>@connection.Name</td>
+            <td><button class="btn btn-primary" @onclick="@(x => Explore(connection))">Explore</button></td>
+        }
+    </tbody>
+</table>
+
+@code{
+
+    private ConnectionForm connectionForm = new ConnectionForm();
+    private List<ConnectionInfo> connections = new List<ConnectionInfo>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        connections = await connectionService.Get();
+    }
+
+    public void Explore(ConnectionInfo connection)
+    {
+        ConnectionState.ConnectionString = connection.Value;
+        navigation.NavigateTo($"explorer");
+    }
+
+    public void HandleSubmit()
+    {
+        ConnectionState.ConnectionString = connectionForm.Value;
+
+        if (connectionForm.Save)
+        {
+            Task.Run(async () => await connectionService.Save(new ConnectionInfo()
+            {
+                Name = connectionForm.Name,
+                Value = connectionForm.Value
+            }));
+        }
+
+        navigation.NavigateTo($"explorer");
+    }
+}

@@ -1,0 +1,111 @@
+﻿@page "/explorer"
+
+@using TinyServiceBusExplorer.Core.Services
+@using Azure.Messaging.ServiceBus
+@using TinyServiceBusExplorer;
+
+@inject IServiceBusService serviceBusService
+@inject NavigationManager navigationManager
+
+<h2>Explorer</h2>
+<div class="row">
+    <div class="col-6">
+        <h3>Queues</h3>
+        <ul class="list-group">
+            @foreach (var queue in Queues)
+            {
+                var classNames = "list-group-item";
+
+                if (queue == currentQueue)
+                {
+                    classNames = $"{classNames} active";
+                }
+
+                <li class="@classNames" @onclick="@(x => HandleQueueTapped(queue))">@queue</li>
+            }
+        </ul>
+    </div>
+    <div class="col-6">
+        <table class="table">
+            <tbody>
+                <tr>
+                    <th>Message id</th>
+                    <th>Enqueued</th>
+                    <th> </th>
+                </tr>
+
+                @foreach (var message in Messages)
+                {
+                    <tr>
+                        <td>@message.MessageId</td>
+                        <td>@FormatDate(message.EnqueuedTime)</td>
+                        <td><button class="btn btn-primary" @onclick="@(x => Open(message))">Show</button></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+
+    private List<string> Queues { get; } = new List<string>();
+    private List<ServiceBusReceivedMessage> Messages { get; } = new List<ServiceBusReceivedMessage>();
+
+    private string currentQueue = string.Empty;
+
+    protected async override Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        await serviceBusService.Init(ConnectionState.ConnectionString);
+        var queues = await serviceBusService.GetQueues();
+
+        Queues.AddRange(queues);
+    }
+
+    public async Task HandleQueueTapped(string queue)
+    {
+        currentQueue = queue;
+
+        Messages.Clear();
+
+        var messages = await serviceBusService.Peek(queue);
+
+        Messages.AddRange(messages);
+
+        MessageState.Messages = messages;
+    }
+
+    public async Task Open(ServiceBusReceivedMessage message)
+    {
+        navigationManager.NavigateTo($"/message/{message.MessageId}");
+    }
+
+    public string FormatDate(DateTimeOffset date)
+    {
+        var timeElapsed = DateTimeOffset.Now - date;
+
+        if (timeElapsed.TotalSeconds < 60)
+        {
+            return $"{timeElapsed.TotalSeconds.ToString("0")} s ago";
+        }
+
+        if (timeElapsed.TotalMinutes < 60)
+        {
+            return $"{timeElapsed.Minutes.ToString("0")} m ago";
+        }
+
+        if (timeElapsed.TotalHours < 24)
+        {
+            return $"{timeElapsed.TotalHours.ToString("0")} h ago";
+        }
+
+        if (timeElapsed.TotalHours >= 24 && timeElapsed.TotalHours < 48)
+        {
+            return $"Yesterday";
+        }
+
+        return date.ToString();
+    }
+}
