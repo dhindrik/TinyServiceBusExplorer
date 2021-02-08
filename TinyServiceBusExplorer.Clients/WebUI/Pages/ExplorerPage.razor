@@ -2,79 +2,114 @@
 
 @using TinyServiceBusExplorer.Core.Services
 @using Azure.Messaging.ServiceBus
-@using TinyServiceBusExplorer;
+@using TinyServiceBusExplorer
 
 @inject IServiceBusService serviceBusService
 @inject NavigationManager navigationManager
 
-<h2>Explorer</h2>
 <div class="row">
-    <div class="col-6">
-        <h3>Queues</h3>
-        <ul class="list-group">
-            @foreach (var queue in Queues)
-            {
-                var classNames = "list-group-item";
 
-                if (queue == currentQueue)
-                {
-                    classNames = $"{classNames} active";
-                }
-
-                <li class="@classNames" @onclick="@(x => HandleQueueTapped(queue))">@queue</li>
-            }
-        </ul>
-    </div>
-    <div class="col-6">
-        <table class="table">
-            <tbody>
-                <tr>
-                    <th>Message id</th>
-                    <th>Enqueued</th>
-                    <th> </th>
-                </tr>
-
-                @foreach (var message in Messages)
-                {
+       <QueueList PeekTapped="@(async (x) => HandleQueueTapped(x))" DeadLetterTapped="@(async (x) => DeadLetterTapped(x))" />
+  
+    <div class="left">
+        @if (string.IsNullOrEmpty(currentQueue))
+        {
+            <Span>Select a queue to show data</Span>
+        }
+        else
+        {
+            <h3>Messages</h3>
+            <button class="btn btn-secondary" @onclick="@(async (x) => await LoadMessages())">Refresh</button><br /><br />
+            <table class="table">
+                <tbody>
                     <tr>
-                        <td>@message.MessageId</td>
-                        <td>@FormatDate(message.EnqueuedTime)</td>
-                        <td><button class="btn btn-primary" @onclick="@(x => Open(message))">Show</button></td>
+                        <th>Message id</th>
+                        <th>Enqueued</th>
+                        <th> </th>
+                        @if(isDeadLetter)
+                        {
+                            <th> </th>
+                        }
                     </tr>
-                }
-            </tbody>
-        </table>
+
+                    @foreach (var message in Messages)
+                    {
+                <tr>
+                    <td>@message.MessageId</td>
+                    <td>@FormatDate(message.EnqueuedTime)</td>
+                    <td><button class="btn btn-primary" @onclick="@(x => Open(message))">Show</button></td>
+                    @if (isDeadLetter)
+                    {
+                        <td><button class="btn btn-warning" @onclick="@(x => Open(message))">Edit</button></td>
+                    }
+                </tr>
+                    }
+                </tbody>
+            </table>
+        }
     </div>
 </div>
 
 @code {
 
-    private List<string> Queues { get; } = new List<string>();
     private List<ServiceBusReceivedMessage> Messages { get; } = new List<ServiceBusReceivedMessage>();
 
     private string currentQueue = string.Empty;
+
+    private bool isDeadLetter = false;
 
     protected async override Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
 
-        await serviceBusService.Init(ConnectionState.ConnectionString);
-        var queues = await serviceBusService.GetQueues();
+        if(ConnectionState.CurrentQueue != null)
+        {
+            currentQueue = ConnectionState.CurrentQueue;
 
-        Queues.AddRange(queues);
+            await LoadMessages();
+        }
     }
 
-    public async Task HandleQueueTapped(string queue)
+    public async Task HandleQueueTapped(string queueName)
     {
-        currentQueue = queue;
+        currentQueue = queueName;
 
+        await LoadMessages();
+    }
+
+    public async Task DeadLetterTapped(string queueName)
+    {
+        isDeadLetter = true;
+        currentQueue = queueName;
+
+        await LoadDeadLetterMessages();
+    }
+
+
+    private async Task LoadDeadLetterMessages()
+    {
         Messages.Clear();
 
-        var messages = await serviceBusService.Peek(queue);
+        var messages = await serviceBusService.PeekDeadLetter(currentQueue);
 
         Messages.AddRange(messages);
 
         MessageState.Messages = messages;
+
+        StateHasChanged();
+    }
+
+    private async Task LoadMessages()
+    {
+        Messages.Clear();
+
+        var messages = await serviceBusService.Peek(currentQueue);
+
+        Messages.AddRange(messages);
+
+        MessageState.Messages = messages;
+
+        StateHasChanged();
     }
 
     public async Task Open(ServiceBusReceivedMessage message)

@@ -24,6 +24,7 @@
     <Folder Include="WebUI\Shared\" />
     <Folder Include="WebUI\Pages\" />
     <Folder Include="Services\" />
+    <Folder Include="WebUI\Components\" />
   </ItemGroup>
   
   <ItemGroup>

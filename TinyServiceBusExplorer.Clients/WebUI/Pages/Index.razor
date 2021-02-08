@@ -34,47 +34,58 @@
 </EditForm>
 <br />
 <h3>Saved connections</h3>
-<table class="table">
+<table class="table connection-list">
     <tbody>
         @foreach (var connection in connections)
         {
-            <td>@connection.Name</td>
-            <td><button class="btn btn-primary" @onclick="@(x => Explore(connection))">Explore</button></td>
+            <tr>
+
+                <td>@connection.Name</td>
+                <td><button class="btn btn-primary" @onclick="@(x => Explore(connection))">Explore</button></td>
+                <td><button class="btn btn-danger" @onclick="@(x => Remove(connection))">Remove</button></td>
+
+            </tr>
         }
     </tbody>
 </table>
 
-@code{
+    @code{
 
-    private ConnectionForm connectionForm = new ConnectionForm();
-    private List<ConnectionInfo> connections = new List<ConnectionInfo>();
+        private ConnectionForm connectionForm = new ConnectionForm();
+        private List<ConnectionInfo> connections = new List<ConnectionInfo>();
 
-    protected override async Task OnInitializedAsync()
-    {
-        await base.OnInitializedAsync();
-
-        connections = await connectionService.Get();
-    }
-
-    public void Explore(ConnectionInfo connection)
-    {
-        ConnectionState.ConnectionString = connection.Value;
-        navigation.NavigateTo($"explorer");
-    }
-
-    public void HandleSubmit()
-    {
-        ConnectionState.ConnectionString = connectionForm.Value;
-
-        if (connectionForm.Save)
+        protected override async Task OnInitializedAsync()
         {
-            Task.Run(async () => await connectionService.Save(new ConnectionInfo()
-            {
-                Name = connectionForm.Name,
-                Value = connectionForm.Value
-            }));
+            await base.OnInitializedAsync();
+
+            connections = await connectionService.Get();
         }
 
-        navigation.NavigateTo($"explorer");
+        public void Explore(ConnectionInfo connection)
+        {
+            ConnectionState.ConnectionString = connection.Value;
+            navigation.NavigateTo($"explorer");
+        }
+
+        public void Remove(ConnectionInfo connection)
+        {
+            connections.Remove(connection);
+            connectionService.Remove(connection);
+        }
+
+        public void HandleSubmit()
+        {
+            ConnectionState.ConnectionString = connectionForm.Value;
+
+            if (connectionForm.Save)
+            {
+                Task.Run(async () => await connectionService.Save(new ConnectionInfo()
+                {
+                    Name = connectionForm.Name,
+                    Value = connectionForm.Value
+                }));
+            }
+
+            navigation.NavigateTo($"explorer");
+        }
     }
-}

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
@@ -64,5 +65,44 @@ namespace TinyServiceBusExplorer.Core.Services
 
             return messages.ToList();
         }
+
+        public async Task<List<ServiceBusReceivedMessage>> PeekDeadLetter(string queueName)
+        {
+            if (client == null)
+            {
+                throw new Exception("You must run init first");
+            }
+            
+            var receiver = client.CreateReceiver(queueName, new ServiceBusReceiverOptions()
+            {
+                SubQueue = SubQueue.DeadLetter
+            });
+
+            var messages = await receiver.PeekMessagesAsync(100);
+            
+            return messages.ToList();
+        }
+
+        public async Task AddToDeadLetter(string queueName, ServiceBusReceivedMessage message)
+        {
+            if (client == null)
+            {
+                throw new Exception("You must run init first");
+            }
+
+            var receiver = client.CreateReceiver(queueName, new ServiceBusReceiverOptions()
+            {
+                ReceiveMode = ServiceBusReceiveMode.PeekLock
+            });
+
+            var messages = await receiver.PeekMessagesAsync(100);
+
+            var messageToAdd = messages.Single(x => x.MessageId == message.MessageId);
+
+            await receiver.DeadLetterMessageAsync(messageToAdd);
+
+            await receiver.DisposeAsync();
+        }
     }
 }
+ 

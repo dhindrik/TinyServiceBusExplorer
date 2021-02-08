@@ -1,0 +1,58 @@
+﻿@using TinyServiceBusExplorer.Core.Services
+@using TinyServiceBusExplorer;
+
+@inject IServiceBusService serviceBusService
+@inject NavigationManager navigationManager
+    <div class="left queue-list">
+        <h3>Queues</h3>
+        <table class="table">
+            <tbody>
+                @foreach (var queue in Queues)
+                {
+                <tr>
+                    <td>@queue</td>
+                    <td><button class="btn btn-success" @onclick="@(x => Peek(queue))">Peek</button></td>
+                    <td><button class="btn btn-warning" @onclick="@(x => DeadLetter(queue))">Dead-letter</button></td>
+                </tr>
+
+                    
+                }
+            </tbody>
+        </table>
+    </div>
+    @code {
+        private List<string> Queues { get; } = new List<string>();
+
+        private string currentQueue = string.Empty;
+
+        [Parameter] public Action<string> PeekTapped { get; set; }
+        [Parameter] public Action<string> DeadLetterTapped { get; set; }
+
+        protected async override Task OnInitializedAsync()
+        {
+            await base.OnInitializedAsync();
+
+            await serviceBusService.Init(ConnectionState.ConnectionString);
+            var queues = await serviceBusService.GetQueues();
+
+            Queues.AddRange(queues);
+        }
+
+        public void Peek(string queue)
+        {
+            currentQueue = queue;
+
+            ConnectionState.CurrentQueue = queue;
+
+            PeekTapped?.Invoke(queue);
+        }
+
+        public void DeadLetter(string queue)
+        {
+            currentQueue = queue;
+
+            ConnectionState.CurrentQueue = queue;
+
+            DeadLetterTapped?.Invoke(queue);
+        }
+    }

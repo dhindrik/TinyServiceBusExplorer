@@ -1,18 +1,26 @@
 ﻿@page "/message/{MessageId}"
 
 @using Azure.Messaging.ServiceBus
-@using TinyServiceBusExplorer  
+@using TinyServiceBusExplorer
+@using System.Xml.Linq
+@using TinyServiceBusExplorer.Core.Services
 
-<h2>Message details</h2>
+@inject IServiceBusService serviceBusService
+@inject NavigationManager navigationManager
+
 <div class="row">
-    <div class="col-6">
+
+    <QueueList PeekTapped="@(async (x) => HandleQueueTapped(x))" />
+
+    <div class="left message-list">
         <h3>Messages</h3>
+        <button class="btn btn-secondary" @onclick="@(async (x) => await LoadMessages())">Refresh</button><br /><br />
         <ul class="list-group">
             @foreach (var message in Messages)
             {
                 var classNames = "list-group-item";
 
-                if(message.MessageId == MessageId)
+                if (message.MessageId == MessageId)
                 {
                     classNames = $"{classNames} active";
                 }
@@ -21,9 +29,13 @@
             }
         </ul>
     </div>
-    <div class="col-6">
-       <h4>Messagecontent</h4>
+    <div class="col-5">
+        <h3>Messagecontent</h3>
+        <button class="btn btn-danger" @onclick="@(async(x)=> await MoveToDeadLetter())">Move to dead-letter</button>
+        <pre>         
         @Text
+        </pre>
+
     </div>
 </div>
 
@@ -31,6 +43,7 @@
     [Parameter] public string MessageId { get; set; }
 
     private string Text { get; set; } = string.Empty;
+    private ServiceBusReceivedMessage CurrentMessage { get; set; }
 
     private List<ServiceBusReceivedMessage> Messages { get; set; } = new List<ServiceBusReceivedMessage>();
 
@@ -40,14 +53,67 @@
 
         Messages = MessageState.Messages;
 
+        SetMessage();
+    }
+
+    private void SetMessage()
+    {
         var message = Messages.Single(x => x.MessageId == MessageId);
 
         SetContent(message);
     }
 
+    private async Task LoadMessages()
+    {
+        Messages.Clear();
+
+        var messages = await serviceBusService.Peek(ConnectionState.CurrentQueue);
+
+        Messages.AddRange(messages);
+
+        MessageState.Messages = messages;
+
+        SetMessage();
+        StateHasChanged();
+    }
+
     private void SetContent(ServiceBusReceivedMessage message)
     {
+        CurrentMessage = message;
+
         MessageId = message.MessageId;
-        Text = message.Body.ToString();
+
+        if (!TrySetXml(message))
+        {
+            Text = Text = message.Body.ToString();
+        }
     }
+
+    public async Task HandleQueueTapped(string queueName)
+    {
+        navigationManager.NavigateTo("explorer");
+    }
+
+    public bool TrySetXml(ServiceBusReceivedMessage message)
+    {
+        try
+        {
+            var xml = XDocument.Parse(message.Body.ToString());
+
+            Text = xml.ToString();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            return false;
+        }
+    }
+
+    private async Task MoveToDeadLetter()
+    {
+        await serviceBusService.AddToDeadLetter(ConnectionState.CurrentQueue, CurrentMessage);
+    }
+
+
 }

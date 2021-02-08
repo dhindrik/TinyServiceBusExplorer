@@ -9,5 +9,6 @@ namespace TinyServiceBusExplorer.Core.Services
     {
         Task<List<ConnectionInfo>> Get();
         Task Save(ConnectionInfo connection);
+        Task Remove(ConnectionInfo connection);
     }
 }
