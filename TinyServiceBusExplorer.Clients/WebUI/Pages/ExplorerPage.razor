@@ -26,10 +26,10 @@
                         <th>Message id</th>
                         <th>Enqueued</th>
                         <th> </th>
-                        @if(isDeadLetter)
+                        @*@if(isDeadLetter)
                         {
                             <th> </th>
-                        }
+                        }*@
                     </tr>
 
                     @foreach (var message in Messages)
@@ -38,10 +38,10 @@
                     <td>@message.MessageId</td>
                     <td>@FormatDate(message.EnqueuedTime)</td>
                     <td><button class="btn btn-primary" @onclick="@(x => Open(message))">Show</button></td>
-                    @if (isDeadLetter)
+                    @*@if (isDeadLetter)
                     {
                         <td><button class="btn btn-warning" @onclick="@(x => Open(message))">Edit</button></td>
-                    }
+                    }*@
                 </tr>
                     }
                 </tbody>
@@ -114,6 +114,12 @@
 
     public async Task Open(ServiceBusReceivedMessage message)
     {
+        if(isDeadLetter)
+        {
+            navigationManager.NavigateTo($"/message/{message.MessageId}/true");
+            return;
+        }
+
         navigationManager.NavigateTo($"/message/{message.MessageId}");
     }
 

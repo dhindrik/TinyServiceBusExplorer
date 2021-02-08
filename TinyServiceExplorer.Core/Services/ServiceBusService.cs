@@ -95,7 +95,7 @@ namespace TinyServiceBusExplorer.Core.Services
                 ReceiveMode = ServiceBusReceiveMode.PeekLock
             });
 
-            var messages = await receiver.PeekMessagesAsync(100);
+            var messages = await receiver.ReceiveMessagesAsync(100);
 
             var messageToAdd = messages.Single(x => x.MessageId == message.MessageId);
 

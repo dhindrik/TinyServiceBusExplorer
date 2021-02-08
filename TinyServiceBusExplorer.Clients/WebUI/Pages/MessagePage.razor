@@ -1,4 +1,5 @@
 ﻿@page "/message/{MessageId}"
+@page "/message/{MessageId}/{IsDeadLetter}"
 
 @using Azure.Messaging.ServiceBus
 @using TinyServiceBusExplorer
@@ -31,7 +32,10 @@
     </div>
     <div class="col-5">
         <h3>Messagecontent</h3>
-        <button class="btn btn-danger" @onclick="@(async(x)=> await MoveToDeadLetter())">Move to dead-letter</button>
+        @if (!IsDeadLetter)
+        {
+            <button class="btn btn-danger" @onclick="@(async (x) => await MoveToDeadLetter())">Move to dead-letter</button>
+        }
         <pre>         
         @Text
         </pre>
@@ -41,6 +45,7 @@
 
 @code {
     [Parameter] public string MessageId { get; set; }
+    [Parameter] public bool IsDeadLetter { get; set; }
 
     private string Text { get; set; } = string.Empty;
     private ServiceBusReceivedMessage CurrentMessage { get; set; }
