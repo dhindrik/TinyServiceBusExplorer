@@ -64,16 +64,16 @@
   <ItemGroup>
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Contents.json" />
     <ImageAsset Include="Assets.xcassets\Contents.json" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Group16.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Group32.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Group32-1.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Group64.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Group128.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Group256.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Group256-1.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Group512.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Group512-1.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Group1024.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\bus-alt16.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\bus-alt32.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\bus-alt32-1.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\bus-alt64.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\bus-alt128.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\bus-alt256.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\bus-alt256-1.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\bus-alt512.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\bus-alt512-1.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\bus-alt1024.png" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\" />
