@@ -11,43 +11,44 @@
 
        <QueueList PeekTapped="@(async (x) => HandleQueueTapped(x))" DeadLetterTapped="@(async (x) => DeadLetterTapped(x))" />
   
-    <div class="left">
-        @if (string.IsNullOrEmpty(currentQueue))
-        {
-            <Span>Select a queue to show data</Span>
-        }
-        else
-        {
-            <h3>Messages</h3>
-            <button class="btn btn-secondary" @onclick="@(async (x) => await LoadMessages())">Refresh</button><br /><br />
-            <table class="table">
-                <tbody>
-                    <tr>
-                        <th>Message id</th>
-                        <th>Enqueued</th>
-                        <th> </th>
-                        @*@if(isDeadLetter)
+       <div class="left">
+           <h3>Messages</h3>
+           @if (string.IsNullOrEmpty(currentQueue))
+           {
+               <Span>Select a queue to show data</Span>
+           }
+           else
+           {
+
+               <button class="btn btn-secondary" @onclick="@(async (x) => await LoadMessages())">Refresh</button><br /><br />
+               <table class="table">
+                   <tbody>
+                       <tr>
+                           <th>Message id</th>
+                           <th>Enqueued</th>
+                           <th> </th>
+                           @*@if(isDeadLetter)
                         {
                             <th> </th>
                         }*@
-                    </tr>
+                       </tr>
 
-                    @foreach (var message in Messages)
-                    {
-                <tr>
-                    <td>@message.MessageId</td>
-                    <td>@FormatDate(message.EnqueuedTime)</td>
-                    <td><button class="btn btn-primary" @onclick="@(x => Open(message))">Show</button></td>
-                    @*@if (isDeadLetter)
-                    {
-                        <td><button class="btn btn-warning" @onclick="@(x => Open(message))">Edit</button></td>
-                    }*@
-                </tr>
-                    }
-                </tbody>
-            </table>
-        }
-    </div>
+                       @foreach (var message in Messages)
+                       {
+                           <tr>
+                               <td>@message.MessageId</td>
+                               <td>@FormatDate(message.EnqueuedTime)</td>
+                               <td><button class="btn btn-primary" @onclick="@(x => Open(message))">Show</button></td>
+                               @*@if (isDeadLetter)
+                            {
+                                <td><button class="btn btn-warning" @onclick="@(x => Open(message))">Edit</button></td>
+                            }*@
+                           </tr>
+                       }
+                   </tbody>
+               </table>
+           }
+       </div>
 </div>
 
 @code {

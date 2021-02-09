@@ -4,6 +4,11 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+.content
+{
+    padding:10px;
+}
+
 .left
 {
     float:left;
@@ -22,6 +27,15 @@ html, body {
         width:450px;
     }
 
+label
+{
+    font-weight:bold;
+}
+.msg-content
+{
+    border-radius:10px;
+    background-color: #EEEEEE;
+}
 
 #blazor-error-ui {
     background: lightyellow;

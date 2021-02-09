@@ -34,12 +34,17 @@
         <h3>Messagecontent</h3>
         @if (!IsDeadLetter)
         {
-            <button class="btn btn-danger" @onclick="@(async (x) => await MoveToDeadLetter())">Move to dead-letter</button>
+            <button class="btn btn-danger" @onclick="@(async (x) => await MoveToDeadLetter())">Move to dead-letter</button><br /><br />
         }
-        <pre>         
+        <label>Content-Type</label>
+        <span>@CurrentMessage.ContentType</span>
+        <label>Body</label>
+        <div class="msg-content">
+
+            <pre>         
         @Text
         </pre>
-
+        </div>
     </div>
 </div>
 
