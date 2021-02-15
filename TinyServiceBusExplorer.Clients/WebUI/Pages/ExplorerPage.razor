@@ -7,19 +7,20 @@
 @inject IServiceBusService serviceBusService
 @inject NavigationManager navigationManager
 
-<div class="row">
+
 
        <QueueList PeekTapped="@(async (x) => HandleQueueTapped(x))" DeadLetterTapped="@(async (x) => DeadLetterTapped(x))" />
   
-       <div class="left">
+       <div class="left middle">
            <h3>Messages</h3>
+
            @if (string.IsNullOrEmpty(currentQueue))
            {
                <Span>Select a queue to show data</Span>
            }
            else
            {
-
+               <b>Queue:</b> <span>@currentQueue</span><br /><br />
                <button class="btn btn-secondary" @onclick="@(async (x) => await LoadMessages())">Refresh</button><br /><br />
                <table class="table">
                    <tbody>
@@ -49,7 +50,7 @@
                </table>
            }
        </div>
-</div>
+
 
 @code {
 
@@ -115,13 +116,15 @@
 
     public async Task Open(ServiceBusReceivedMessage message)
     {
+        MessageState.CurrentMessage = message;
+
         if(isDeadLetter)
         {
-            navigationManager.NavigateTo($"/message/{message.MessageId}/true");
+            navigationManager.NavigateTo($"/message/true");
             return;
         }
 
-        navigationManager.NavigateTo($"/message/{message.MessageId}");
+        navigationManager.NavigateTo($"/message");
     }
 
     public string FormatDate(DateTimeOffset date)

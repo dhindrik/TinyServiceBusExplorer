@@ -7,5 +7,6 @@ namespace TinyServiceBusExplorer
     public static class MessageState
     {
         public static List<ServiceBusReceivedMessage> Messages { get; set; } = new List<ServiceBusReceivedMessage>();
+        public static ServiceBusReceivedMessage? CurrentMessage { get; set; }
     }
 }

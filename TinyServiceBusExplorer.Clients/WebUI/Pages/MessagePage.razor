@@ -1,5 +1,5 @@
-﻿@page "/message/{MessageId}"
-@page "/message/{MessageId}/{IsDeadLetter}"
+﻿@page "/message"
+@page "/message/{IsDeadLetter}"
 
 @using Azure.Messaging.ServiceBus
 @using TinyServiceBusExplorer
@@ -9,11 +9,9 @@
 @inject IServiceBusService serviceBusService
 @inject NavigationManager navigationManager
 
-<div class="row">
-
     <QueueList PeekTapped="@(async (x) => HandleQueueTapped(x))" />
 
-    <div class="left message-list">
+    <div class="left message-list middle">
         <h3>Messages</h3>
         <button class="btn btn-secondary" @onclick="@(async (x) => await LoadMessages())">Refresh</button><br /><br />
         <ul class="list-group">
@@ -21,7 +19,7 @@
             {
                 var classNames = "list-group-item";
 
-                if (message.MessageId == MessageId)
+                if (message == CurrentMessage)
                 {
                     classNames = $"{classNames} active";
                 }
@@ -32,10 +30,16 @@
     </div>
     <div class="col-5">
         <h3>Messagecontent</h3>
-        @if (!IsDeadLetter)
+        @if (!isDeadLetter)
         {
-            <button class="btn btn-danger" @onclick="@(async (x) => await MoveToDeadLetter())">Move to dead-letter</button><br /><br />
+            <button class="btn btn-danger" @onclick="@(async (x) => await MoveToDeadLetter())">Move to dead-letter</button>
         }
+        else
+        {
+            <button class="btn btn-danger" @onclick="@(async (x) => await Resend())">Resend message</button>
+        }
+        <br /><br />
+
         <label>Content-Type</label>
         <span>@CurrentMessage.ContentType</span>
         <label>Body</label>
@@ -46,11 +50,24 @@
         </pre>
         </div>
     </div>
-</div>
+
 
 @code {
-    [Parameter] public string MessageId { get; set; }
-    [Parameter] public bool IsDeadLetter { get; set; }
+    private bool isDeadLetter;
+    [Parameter] public string IsDeadLetter
+    {
+        get => isDeadLetter.ToString();
+        set
+        {
+            if(bool.TryParse(value, out bool result))
+            {
+                isDeadLetter = result;
+                return;
+            }
+
+            isDeadLetter = false;
+        }
+    }
 
     private string Text { get; set; } = string.Empty;
     private ServiceBusReceivedMessage CurrentMessage { get; set; }
@@ -68,7 +85,7 @@
 
     private void SetMessage()
     {
-        var message = Messages.Single(x => x.MessageId == MessageId);
+        var message = MessageState.CurrentMessage;
 
         SetContent(message);
     }
@@ -90,8 +107,6 @@
     private void SetContent(ServiceBusReceivedMessage message)
     {
         CurrentMessage = message;
-
-        MessageId = message.MessageId;
 
         if (!TrySetXml(message))
         {
@@ -123,6 +138,11 @@
     private async Task MoveToDeadLetter()
     {
         await serviceBusService.AddToDeadLetter(ConnectionState.CurrentQueue, CurrentMessage);
+    }
+
+    private async Task Resend()
+    {
+        await serviceBusService.Resend(ConnectionState.CurrentQueue, CurrentMessage);
     }
 
 

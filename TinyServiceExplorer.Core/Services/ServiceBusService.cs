@@ -97,11 +97,53 @@ namespace TinyServiceBusExplorer.Core.Services
 
             var messages = await receiver.ReceiveMessagesAsync(100);
 
-            var messageToAdd = messages.Single(x => x.MessageId == message.MessageId);
+            var messageToAdd = messages.Single(x => x.MessageId == message.MessageId && x.EnqueuedTime == message.EnqueuedTime);
 
             await receiver.DeadLetterMessageAsync(messageToAdd);
 
+            foreach(var msg in messages)
+            {
+                if(msg == messageToAdd)
+                {
+                    continue;
+                }
+
+                await receiver.AbandonMessageAsync(msg);
+            }
+
             await receiver.DisposeAsync();
+        }
+
+        public async Task Resend(string queueName, ServiceBusReceivedMessage message)
+        {
+            try
+            {
+                var receiver = client.CreateReceiver(queueName, new ServiceBusReceiverOptions()
+                {
+                    SubQueue = SubQueue.DeadLetter,
+                    ReceiveMode = ServiceBusReceiveMode.PeekLock
+                });
+
+                var messages = await receiver.ReceiveMessagesAsync(100);
+
+                var sender = client.CreateSender(queueName);
+
+                var messageToAdd = new ServiceBusMessage()
+                {
+                    SessionId = message.SessionId,
+                    Body = message.Body
+                };
+
+                await sender.SendMessageAsync(messageToAdd);
+
+                var oldMessage = messages.Single(x => x.MessageId == message.MessageId && x.EnqueuedTime == message.EnqueuedTime);
+
+                await receiver.CompleteMessageAsync(oldMessage);
+            }
+            catch(Exception ex)
+            {
+
+            }
         }
     }
 }

@@ -12,5 +12,6 @@ namespace TinyServiceBusExplorer.Core.Services
         Task<List<ServiceBusReceivedMessage>> Peek(string queueName);
         Task<List<ServiceBusReceivedMessage>> PeekDeadLetter(string queueName);
         Task AddToDeadLetter(string queueName, ServiceBusReceivedMessage message);
+        Task Resend(string queueName, ServiceBusReceivedMessage message);
     }
 }
